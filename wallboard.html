@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Global Time Wall</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --bg-1: #020617;
+        --bg-2: #0f172a;
+        --bg-3: #111827;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --border: rgba(255, 255, 255, 0.1);
+        --card-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+        --day-card: rgba(251, 191, 36, 0.1);
+        --day-border: rgba(252, 211, 77, 0.22);
+        --night-card: rgba(56, 189, 248, 0.06);
+        --night-border: rgba(125, 211, 252, 0.18);
+        --working-bg: rgba(16, 185, 129, 0.12);
+        --working-border: rgba(110, 231, 183, 0.22);
+        --working-text: #d1fae5;
+        --idle-bg: rgba(148, 163, 184, 0.12);
+        --idle-border: rgba(203, 213, 225, 0.12);
+        --idle-text: #cbd5e1;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 30%),
+          linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
+      }
+
+      body { min-height: 100vh; }
+
+      .page {
+        max-width: 1800px;
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 22px 24px;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: var(--card-shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .brand-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .brand-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 6px 0 0;
+        font-size: clamp(32px, 4vw, 42px);
+        line-height: 1.05;
+      }
+
+      .utc-box {
+        padding: 14px 16px;
+        text-align: right;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: rgba(2, 6, 23, 0.45);
+      }
+
+      .utc-value {
+        margin-top: 4px;
+        font-size: 18px;
+        color: #f1f5f9;
+      }
+
+      .legend {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .legend-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: #e2e8f0;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .pill.day {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: rgba(253, 224, 71, 0.18);
+        color: #fde68a;
+      }
+
+      .pill.night {
+        background: rgba(56, 189, 248, 0.1);
+        border-color: rgba(125, 211, 252, 0.18);
+        color: #bae6fd;
+      }
+
+      .pill.work {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(110, 231, 183, 0.22);
+        color: #d1fae5;
+      }
+
+      .pill svg { width: 16px; height: 16px; }
+
+      .featured-grid,
+      .secondary-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .secondary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+      .card {
+        position: relative;
+        overflow: hidden;
+        min-height: 255px;
+        padding: 24px;
+        border-radius: 28px;
+        border: 1px solid var(--border);
+        box-shadow: var(--card-shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .card.day {
+        background: var(--day-card);
+        border-color: var(--day-border);
+        box-shadow: var(--card-shadow), 0 0 40px rgba(251, 191, 36, 0.12);
+      }
+
+      .card.night {
+        background: var(--night-card);
+        border-color: var(--night-border);
+        box-shadow: var(--card-shadow), 0 0 40px rgba(56, 189, 248, 0.08);
+      }
+
+      .card-header,
+      .time-row { display: flex; justify-content: space-between; gap: 16px; }
+      .card-header { align-items: flex-start; margin-bottom: 18px; }
+      .time-row { align-items: center; margin-bottom: 18px; }
+
+      .region {
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .city {
+        margin-top: 8px;
+        font-weight: 700;
+        color: white;
+      }
+
+      .city.featured { font-size: 32px; }
+      .city.secondary { font-size: 28px; }
+
+      .status-day {
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 14px;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-day svg { width: 16px; height: 16px; }
+      .status-day.day {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: rgba(253, 224, 71, 0.18);
+        color: #fef3c7;
+      }
+      .status-day.night {
+        background: rgba(56, 189, 248, 0.1);
+        border-color: rgba(125, 211, 252, 0.18);
+        color: #dbeafe;
+      }
+
+      .time-value {
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .time-value.featured { font-size: clamp(54px, 4.8vw, 72px); }
+      .time-value.secondary { font-size: clamp(44px, 3.8vw, 56px); }
+      .time-value.day { color: #fffbeb; }
+      .time-value.night { color: #e0f2fe; }
+
+      .weather-stack {
+        min-width: 128px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        color: #cbd5e1;
+        text-align: right;
+      }
+
+      .weather-icon {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulseWeather 2.5s ease-in-out infinite;
+        transform-origin: center;
+      }
+
+      .weather-icon svg {
+        width: 36px;
+        height: 36px;
+        stroke-width: 1.9;
+      }
+
+      .weather-temp {
+        margin-top: 6px;
+        font-size: 14px;
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .work-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 14px;
+        border: 1px solid;
+      }
+
+      .work-badge svg { width: 16px; height: 16px; }
+      .work-badge.active {
+        background: var(--working-bg);
+        border-color: var(--working-border);
+        color: var(--working-text);
+      }
+      .work-badge.idle {
+        background: var(--idle-bg);
+        border-color: var(--idle-border);
+        color: var(--idle-text);
+      }
+
+      .meta-line {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: 20px;
+      }
+
+      .meta-line svg,
+      .timezone-line svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+      }
+
+      .meta-line.day { color: rgba(255, 251, 235, 0.85); }
+      .meta-line.night { color: rgba(224, 242, 254, 0.78); }
+
+      .timezone-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .dot { color: #475569; }
+
+      @keyframes pulseWeather {
+        0%, 100% { transform: scale(1); opacity: 0.95; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+
+      @media (max-width: 1200px) {
+        .featured-grid,
+        .secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 760px) {
+        .page { padding: 16px; }
+        .topbar,
+        .legend,
+        .card-header,
+        .time-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .featured-grid,
+        .secondary-grid { grid-template-columns: 1fr; }
+        .weather-stack {
+          align-items: flex-start;
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-icon"><i data-lucide="globe"></i></div>
+          <div>
+            <div class="eyebrow">Client Coverage</div>
+            <h1>Global Time Wall</h1>
+          </div>
+        </div>
+        <div class="utc-box">
+          <div class="eyebrow">UTC Reference</div>
+          <div class="utc-value" id="utcTime"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-group">
+          <!-- <div class="pill work"><i data-lucide="briefcase"></i><span>Working hours highlighted</span></div> -->
+          <div class="pill day"><i data-lucide="sun-medium"></i><span>Daytime</span></div>
+          <div class="pill night"><i data-lucide="moon-star"></i><span>Nighttime</span></div>
+          <!-- <div class="pill"><i data-lucide="cloud"></i><span>Live weather</span></div> -->
+        </div>
+        <div class="pill"><i data-lucide="arrow-up-down"></i><span>Sorted by who is most likely online now</span></div>
+      </div>
+
+      <div class="featured-grid" id="featuredGrid"></div>
+      <div class="secondary-grid" id="secondaryGrid"></div>
+    </div>
+
+    <script>
+      const LOCATIONS = [
+        { label: "New York", region: "United States", tz: "America/New_York", lat: 40.7128, lon: -74.006 },
+        { label: "Chicago", region: "United States", tz: "America/Chicago", lat: 41.8781, lon: -87.6298 },
+        { label: "Denver", region: "United States", tz: "America/Denver", lat: 39.7392, lon: -104.9903 },
+        { label: "Los Angeles", region: "United States", tz: "America/Los_Angeles", lat: 34.0522, lon: -118.2437 },
+        { label: "Toronto", region: "Canada", tz: "America/Toronto", lat: 43.6532, lon: -79.3832 },
+        { label: "Buenos Aires", region: "Argentina", tz: "America/Argentina/Buenos_Aires", lat: -34.6037, lon: -58.3816 },
+        { label: "London", region: "United Kingdom", tz: "Europe/London", lat: 51.5072, lon: -0.1276 },
+        { label: "Sydney", region: "Australia", tz: "Australia/Sydney", lat: -33.8688, lon: 151.2093 },
+        { label: "Auckland", region: "New Zealand", tz: "Pacific/Auckland", lat: -36.8509, lon: 174.7645 }
+      ];
+
+      const weatherByTz = {};
+      const featuredGrid = document.getElementById("featuredGrid");
+      const secondaryGrid = document.getElementById("secondaryGrid");
+      const utcTime = document.getElementById("utcTime");
+
+      function cToF(c) {
+        return c != null ? Math.round((c * 9) / 5 + 32) : null;
+      }
+
+      function formatTime(date, tz) {
+        return new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        }).format(date);
+      }
+
+      function formatDate(date, tz) {
+        return new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          weekday: "short",
+          month: "short",
+          day: "numeric"
+        }).format(date);
+      }
+
+      function formatOffset(tz) {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          timeZoneName: "shortOffset",
+          hour: "2-digit"
+        }).formatToParts(new Date());
+        const zoneName = parts.find((p) => p.type === "timeZoneName");
+        return zoneName ? zoneName.value : tz;
+      }
+
+      function getLocalHour(now, tz) {
+        return Number(new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          hour: "2-digit",
+          hour12: false
+        }).format(now));
+      }
+
+      function getLocalMinute(now, tz) {
+        return Number(new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          minute: "2-digit"
+        }).format(now));
+      }
+
+      function getDayState(now, tz) {
+        const hour = getLocalHour(now, tz);
+        if (hour >= 6 && hour < 12) return "Morning";
+        if (hour >= 12 && hour < 18) return "Afternoon";
+        if (hour >= 18 && hour < 22) return "Evening";
+        return "Night";
+      }
+
+      function getWorkStatus(now, tz) {
+        const hour = getLocalHour(now, tz);
+        if (hour >= 8 && hour < 18) return "Working hours";
+        if (hour >= 6 && hour < 8) return "Starting soon";
+        if (hour >= 18 && hour < 22) return "After hours";
+        return "Offline";
+      }
+
+      function getWorkPriority(now, tz) {
+        const status = getWorkStatus(now, tz);
+        if (status === "Working hours") return 0;
+        if (status === "Starting soon") return 1;
+        return 2;
+      }
+
+      function getMinutesToWorkStart(now, tz) {
+        const hour = getLocalHour(now, tz);
+        const minute = getLocalMinute(now, tz);
+        const currentMinutes = hour * 60 + minute;
+        const startMinutes = 8 * 60;
+        if (currentMinutes < startMinutes) return startMinutes - currentMinutes;
+        if (currentMinutes >= startMinutes && currentMinutes < 18 * 60) return currentMinutes - startMinutes;
+        return 24 * 60 - currentMinutes + startMinutes;
+      }
+
+      function getWeatherIconName(code, isDay) {
+        if (code === undefined || code === null) return "cloud";
+        if (code === 0) return isDay ? "sun" : "moon-star";
+        if ([1, 2].includes(code)) return "cloud-sun";
+        if (code === 3) return "cloud";
+        if ([45, 48].includes(code)) return "cloud-fog";
+        if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "cloud-rain";
+        if ([71, 73, 75, 77, 85, 86].includes(code)) return "cloud-snow";
+        if ([95, 96, 99].includes(code)) return "zap";
+        return "cloud";
+      }
+
+      function runSanityChecks() {
+        console.assert(cToF(0) === 32, "cToF should convert 0C to 32F");
+        console.assert(cToF(100) === 212, "cToF should convert 100C to 212F");
+        console.assert(cToF(null) === null, "cToF should return null for null input");
+        console.assert(getWeatherIconName(0, true) === "sun", "Clear daytime should map to sun");
+        console.assert(getWeatherIconName(0, false) === "moon-star", "Clear nighttime should map to moon-star");
+        console.assert(getWeatherIconName(61, true) === "cloud-rain", "Rain codes should map to cloud-rain");
+        console.assert(getWorkPriority(new Date("2026-03-18T14:00:00Z"), "America/New_York") >= 0, "Work priority should return a number");
+      }
+
+      function iconMarkup(name, extraClass = "") {
+        return `<i data-lucide="${name}" class="${extraClass}"></i>`;
+      }
+
+      function renderCard(city, now, featured) {
+        const weather = weatherByTz[city.tz] || {};
+        const localTime = formatTime(now, city.tz);
+        const localDate = formatDate(now, city.tz);
+        const offset = formatOffset(city.tz);
+        const dayState = getDayState(now, city.tz);
+        const workStatus = getWorkStatus(now, city.tz);
+        const localHour = getLocalHour(now, city.tz);
+        const isDay = localHour >= 7 && localHour < 18;
+        const cardClass = isDay ? "day" : "night";
+        const workClass = workStatus === "Working hours" || workStatus === "Starting soon" ? "active" : "idle";
+        const weatherIcon = getWeatherIconName(weather.weatherCode, weather.isDay ?? isDay);
+        const dayIcon = isDay ? "sun-medium" : "moon-star";
+
+        return `
+          <section class="card ${cardClass}">
+            <div class="card-header">
+              <div>
+                <div class="region">${city.region}</div>
+                <div class="city ${featured ? "featured" : "secondary"}">${city.label}</div>
+              </div>
+              <div class="badges">
+                <div class="status-day ${cardClass}">${iconMarkup(dayIcon)}<span>${dayState}</span></div>
+                <div class="work-badge ${workClass}">${iconMarkup("briefcase")}<span>${workStatus}</span></div>
+              </div>
+            </div>
+
+            <div class="time-row">
+              <div class="time-value ${featured ? "featured" : "secondary"} ${cardClass}">${localTime}</div>
+              <div class="weather-stack">
+                <div class="weather-icon">${iconMarkup(weatherIcon)}</div>
+                <div class="weather-temp">${weather.temperature != null ? `${Math.round(weather.temperature)}°C / ${cToF(weather.temperature)}°F` : "--"}</div>
+              </div>
+            </div>
+
+            <div class="meta-line ${cardClass}">${iconMarkup("calendar-days")}<span>${localDate}</span></div>
+            <div class="timezone-line">${iconMarkup("clock-3")}<span>${offset}</span><span class="dot">•</span><span>${city.tz}</span></div>
+          </section>
+        `;
+      }
+
+      function render() {
+        const now = new Date();
+        utcTime.textContent = new Intl.DateTimeFormat("en-US", {
+          timeZone: "UTC",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+          weekday: "short",
+          month: "short",
+          day: "numeric"
+        }).format(now);
+
+        const sorted = [...LOCATIONS].sort((a, b) => {
+          const priorityDiff = getWorkPriority(now, a.tz) - getWorkPriority(now, b.tz);
+          if (priorityDiff !== 0) return priorityDiff;
+          const proximityDiff = getMinutesToWorkStart(now, a.tz) - getMinutesToWorkStart(now, b.tz);
+          if (proximityDiff !== 0) return proximityDiff;
+          return a.label.localeCompare(b.label);
+        });
+
+        const featured = sorted.slice(0, 3);
+        const secondary = sorted.slice(3);
+
+        featuredGrid.innerHTML = featured.map((city) => renderCard(city, now, true)).join("");
+        secondaryGrid.innerHTML = secondary.map((city) => renderCard(city, now, false)).join("");
+
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+      }
+
+      async function loadWeather() {
+        try {
+          const results = await Promise.all(
+            LOCATIONS.map(async (city) => {
+              const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code,is_day&daily=temperature_2m_max,temperature_2m_min&timezone=auto`;
+              const response = await fetch(url);
+              const data = await response.json();
+              return [
+                city.tz,
+                {
+                  temperature: data?.current?.temperature_2m ?? null,
+                  weatherCode: data?.current?.weather_code ?? null,
+                  isDay: Boolean(data?.current?.is_day),
+                  max: data?.daily?.temperature_2m_max?.[0] ?? null,
+                  min: data?.daily?.temperature_2m_min?.[0] ?? null
+                }
+              ];
+            })
+          );
+
+          for (const [tz, weather] of results) {
+            weatherByTz[tz] = weather;
+          }
+
+          render();
+        } catch (error) {
+          console.error("Weather fetch failed", error);
+        }
+      }
+
+      runSanityChecks();
+      render();
+      loadWeather();
+      setInterval(render, 30000);
+      setInterval(loadWeather, 15 * 60 * 1000);
+    </script>
+  </body>
+</html>
