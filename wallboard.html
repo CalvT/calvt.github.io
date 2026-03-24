@@ -24,6 +24,12 @@
         --idle-bg: rgba(148, 163, 184, 0.12);
         --idle-border: rgba(203, 213, 225, 0.12);
         --idle-text: #cbd5e1;
+        --holiday-bg: rgba(244, 114, 182, 0.14);
+        --holiday-border: rgba(251, 207, 232, 0.2);
+        --holiday-text: #fce7f3;
+        --weekend-bg: rgba(168, 85, 247, 0.14);
+        --weekend-border: rgba(216, 180, 254, 0.2);
+        --weekend-text: #f3e8ff;
       }
 
       * { box-sizing: border-box; }
@@ -111,61 +117,11 @@
         color: #f1f5f9;
       }
 
-      .legend {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-
-      .legend-group {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 14px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.05);
-        color: #e2e8f0;
-        font-size: 14px;
-        white-space: nowrap;
-      }
-
-      .pill.day {
-        background: rgba(251, 191, 36, 0.1);
-        border-color: rgba(253, 224, 71, 0.18);
-        color: #fde68a;
-      }
-
-      .pill.night {
-        background: rgba(56, 189, 248, 0.1);
-        border-color: rgba(125, 211, 252, 0.18);
-        color: #bae6fd;
-      }
-
-      .pill.work {
-        background: rgba(16, 185, 129, 0.12);
-        border-color: rgba(110, 231, 183, 0.22);
-        color: #d1fae5;
-      }
-
-      .pill svg { width: 16px; height: 16px; }
-
-      .featured-grid,
-      .secondary-grid {
+      .grid {
         display: grid;
         gap: 20px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-
-      .featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .secondary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
       .card {
         position: relative;
@@ -206,10 +162,8 @@
         margin-top: 8px;
         font-weight: 700;
         color: white;
+        font-size: 28px;
       }
-
-      .city.featured { font-size: 32px; }
-      .city.secondary { font-size: 28px; }
 
       .status-day {
         padding: 8px 12px;
@@ -237,9 +191,8 @@
         font-weight: 700;
         line-height: 1;
         letter-spacing: -0.04em;
+        font-size: clamp(44px, 3.8vw, 56px);
       }
-      .time-value.featured { font-size: clamp(54px, 4.8vw, 72px); }
-      .time-value.secondary { font-size: clamp(44px, 3.8vw, 56px); }
       .time-value.day { color: #fffbeb; }
       .time-value.night { color: #e0f2fe; }
 
@@ -278,7 +231,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-bottom: 18px;
+        justify-content: flex-end;
       }
 
       .work-badge {
@@ -301,6 +254,16 @@
         background: var(--idle-bg);
         border-color: var(--idle-border);
         color: var(--idle-text);
+      }
+      .work-badge.weekend {
+        background: var(--weekend-bg);
+        border-color: var(--weekend-border);
+        color: var(--weekend-text);
+      }
+      .work-badge.holiday {
+        background: var(--holiday-bg);
+        border-color: var(--holiday-border);
+        color: var(--holiday-text);
       }
 
       .meta-line {
@@ -337,24 +300,24 @@
       }
 
       @media (max-width: 1200px) {
-        .featured-grid,
-        .secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
 
       @media (max-width: 760px) {
         .page { padding: 16px; }
         .topbar,
-        .legend,
         .card-header,
         .time-row {
           flex-direction: column;
           align-items: flex-start;
         }
-        .featured-grid,
-        .secondary-grid { grid-template-columns: 1fr; }
+        .grid { grid-template-columns: 1fr; }
         .weather-stack {
           align-items: flex-start;
           text-align: left;
+        }
+        .badges {
+          justify-content: flex-start;
         }
       }
     </style>
@@ -375,36 +338,25 @@
         </div>
       </div>
 
-      <!-- <div class="legend">
-        <div class="legend-group">
-          <div class="pill work"><i data-lucide="briefcase"></i><span>Working hours highlighted</span></div>
-          <div class="pill day"><i data-lucide="sun-medium"></i><span>Daytime</span></div>
-          <div class="pill night"><i data-lucide="moon-star"></i><span>Nighttime</span></div>
-          <div class="pill"><i data-lucide="cloud"></i><span>Live weather</span></div>
-        </div>
-        <div class="pill"><i data-lucide="arrow-up-down"></i><span>Sorted by who is most likely online now</span></div>
-      </div> -->
-
-      <div class="featured-grid" id="featuredGrid"></div>
-      <div class="secondary-grid" id="secondaryGrid"></div>
+      <div class="grid" id="grid"></div>
     </div>
 
     <script>
       const LOCATIONS = [
-        { label: "New York", region: "United States", tz: "America/New_York", lat: 40.7128, lon: -74.006 },
-        { label: "Chicago", region: "United States", tz: "America/Chicago", lat: 41.8781, lon: -87.6298 },
-        { label: "Denver", region: "United States", tz: "America/Denver", lat: 39.7392, lon: -104.9903 },
-        { label: "Los Angeles", region: "United States", tz: "America/Los_Angeles", lat: 34.0522, lon: -118.2437 },
-        { label: "Toronto", region: "Canada", tz: "America/Toronto", lat: 43.6532, lon: -79.3832 },
-        { label: "Buenos Aires", region: "Argentina", tz: "America/Argentina/Buenos_Aires", lat: -34.6037, lon: -58.3816 },
-        { label: "London", region: "United Kingdom", tz: "Europe/London", lat: 51.5072, lon: -0.1276 },
-        { label: "Sydney", region: "Australia", tz: "Australia/Sydney", lat: -33.8688, lon: 151.2093 },
-        { label: "Auckland", region: "New Zealand", tz: "Pacific/Auckland", lat: -36.8509, lon: 174.7645 }
+        { label: "New York", region: "United States", countryCode: "US", tz: "America/New_York", lat: 40.7128, lon: -74.006 },
+        { label: "Chicago", region: "United States", countryCode: "US", tz: "America/Chicago", lat: 41.8781, lon: -87.6298 },
+        { label: "Denver", region: "United States", countryCode: "US", tz: "America/Denver", lat: 39.7392, lon: -104.9903 },
+        { label: "Los Angeles", region: "United States", countryCode: "US", tz: "America/Los_Angeles", lat: 34.0522, lon: -118.2437 },
+        { label: "Toronto", region: "Canada", countryCode: "CA", tz: "America/Toronto", lat: 43.6532, lon: -79.3832 },
+        { label: "Buenos Aires", region: "Argentina", countryCode: "AR", tz: "America/Argentina/Buenos_Aires", lat: -34.6037, lon: -58.3816 },
+        { label: "London", region: "United Kingdom", countryCode: "GB", tz: "Europe/London", lat: 51.5072, lon: -0.1276 },
+        { label: "Sydney", region: "Australia", countryCode: "AU", tz: "Australia/Sydney", lat: -33.8688, lon: 151.2093 },
+        { label: "Auckland", region: "New Zealand", countryCode: "NZ", tz: "Pacific/Auckland", lat: -36.8509, lon: 174.7645 }
       ];
 
       const weatherByTz = {};
-      const featuredGrid = document.getElementById("featuredGrid");
-      const secondaryGrid = document.getElementById("secondaryGrid");
+      const holidaysByCountryYear = {};
+      const grid = document.getElementById("grid");
       const utcTime = document.getElementById("utcTime");
 
       function cToF(c) {
@@ -439,19 +391,36 @@
         return zoneName ? zoneName.value : tz;
       }
 
-      function getLocalHour(now, tz) {
-        return Number(new Intl.DateTimeFormat("en-US", {
+      function getLocalParts(now, tz) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
           timeZone: tz,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          weekday: "short",
           hour: "2-digit",
+          minute: "2-digit",
           hour12: false
-        }).format(now));
+        }).formatToParts(now);
+
+        const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+        return {
+          year: Number(map.year),
+          month: Number(map.month),
+          day: Number(map.day),
+          dateKey: `${map.year}-${map.month}-${map.day}`,
+          weekday: map.weekday,
+          hour: Number(map.hour),
+          minute: Number(map.minute)
+        };
+      }
+
+      function getLocalHour(now, tz) {
+        return getLocalParts(now, tz).hour;
       }
 
       function getLocalMinute(now, tz) {
-        return Number(new Intl.DateTimeFormat("en-US", {
-          timeZone: tz,
-          minute: "2-digit"
-        }).format(now));
+        return getLocalParts(now, tz).minute;
       }
 
       function getDayState(now, tz) {
@@ -462,24 +431,91 @@
         return "Night";
       }
 
-      function getWorkStatus(now, tz) {
-        const hour = getLocalHour(now, tz);
-        if (hour >= 8 && hour < 18) return "Working hours";
-        if (hour >= 6 && hour < 8) return "Starting soon";
-        if (hour >= 18 && hour < 22) return "After hours";
-        return "Offline";
+      function isWeekend(now, tz) {
+        const weekday = getLocalParts(now, tz).weekday;
+        return weekday === "Sat" || weekday === "Sun";
       }
 
-      function getWorkPriority(now, tz) {
-        const status = getWorkStatus(now, tz);
-        if (status === "Working hours") return 0;
-        if (status === "Starting soon") return 1;
-        return 2;
+      function getHolidayEntry(now, city) {
+        const local = getLocalParts(now, city.tz);
+        const key = `${city.countryCode}-${local.year}`;
+        const holidays = holidaysByCountryYear[key] || [];
+        return holidays.find((holiday) => holiday.date === local.dateKey) || null;
       }
 
-      function getMinutesToWorkStart(now, tz) {
-        const hour = getLocalHour(now, tz);
-        const minute = getLocalMinute(now, tz);
+      function getAvailabilityStatus(now, city) {
+        const holiday = getHolidayEntry(now, city);
+        if (holiday) {
+          return {
+            label: "Holiday",
+            icon: "party-popper",
+            className: "holiday",
+            sortPriority: 3,
+            detail: holiday.localName || holiday.name || "Public holiday"
+          };
+        }
+
+        if (isWeekend(now, city.tz)) {
+          return {
+            label: "Weekend",
+            icon: "calendar-off",
+            className: "weekend",
+            sortPriority: 2,
+            detail: "Weekend"
+          };
+        }
+
+        const hour = getLocalHour(now, city.tz);
+        if (hour >= 8 && hour < 18) {
+          return {
+            label: "Working hours",
+            icon: "briefcase",
+            className: "active",
+            sortPriority: 0,
+            detail: "Within workday"
+          };
+        }
+
+        if (hour >= 6 && hour < 8) {
+          return {
+            label: "Starting soon",
+            icon: "briefcase-business",
+            className: "active",
+            sortPriority: 1,
+            detail: "Approaching workday"
+          };
+        }
+
+        if (hour >= 18 && hour < 22) {
+          return {
+            label: "After hours",
+            icon: "briefcase",
+            className: "idle",
+            sortPriority: 2,
+            detail: "After workday"
+          };
+        }
+
+        return {
+          label: "Offline",
+          icon: "moon-star",
+          className: "idle",
+          sortPriority: 2,
+          detail: "Outside workday"
+        };
+      }
+
+      function getWorkPriority(now, city) {
+        return getAvailabilityStatus(now, city).sortPriority;
+      }
+
+      function getMinutesToWorkStart(now, city) {
+        const status = getAvailabilityStatus(now, city);
+        if (status.label === "Holiday") return 10000;
+        if (status.label === "Weekend") return 9000;
+
+        const hour = getLocalHour(now, city.tz);
+        const minute = getLocalMinute(now, city.tz);
         const currentMinutes = hour * 60 + minute;
         const startMinutes = 8 * 60;
         if (currentMinutes < startMinutes) return startMinutes - currentMinutes;
@@ -506,42 +542,43 @@
         console.assert(getWeatherIconName(0, true) === "sun", "Clear daytime should map to sun");
         console.assert(getWeatherIconName(0, false) === "moon-star", "Clear nighttime should map to moon-star");
         console.assert(getWeatherIconName(61, true) === "cloud-rain", "Rain codes should map to cloud-rain");
-        console.assert(getWorkPriority(new Date("2026-03-18T14:00:00Z"), "America/New_York") >= 0, "Work priority should return a number");
+        console.assert(isWeekend(new Date("2026-03-22T14:00:00Z"), "America/New_York") === true, "Sunday should be weekend");
+        console.assert(isWeekend(new Date("2026-03-23T14:00:00Z"), "America/New_York") === false, "Monday should not be weekend");
       }
 
       function iconMarkup(name, extraClass = "") {
         return `<i data-lucide="${name}" class="${extraClass}"></i>`;
       }
 
-      function renderCard(city, now, featured) {
+      function renderCard(city, now) {
         const weather = weatherByTz[city.tz] || {};
         const localTime = formatTime(now, city.tz);
         const localDate = formatDate(now, city.tz);
         const offset = formatOffset(city.tz);
         const dayState = getDayState(now, city.tz);
-        const workStatus = getWorkStatus(now, city.tz);
         const localHour = getLocalHour(now, city.tz);
         const isDay = localHour >= 7 && localHour < 18;
         const cardClass = isDay ? "day" : "night";
-        const workClass = workStatus === "Working hours" || workStatus === "Starting soon" ? "active" : "idle";
         const weatherIcon = getWeatherIconName(weather.weatherCode, weather.isDay ?? isDay);
         const dayIcon = isDay ? "sun-medium" : "moon-star";
+        const availability = getAvailabilityStatus(now, city);
+        const availabilityTitle = availability.detail ? ` title="${availability.detail.replace(/"/g, "&quot;")}"` : "";
 
         return `
           <section class="card ${cardClass}">
             <div class="card-header">
               <div>
                 <div class="region">${city.region}</div>
-                <div class="city ${featured ? "featured" : "secondary"}">${city.label}</div>
+                <div class="city">${city.label}</div>
               </div>
               <div class="badges">
                 <div class="status-day ${cardClass}">${iconMarkup(dayIcon)}<span>${dayState}</span></div>
-                <div class="work-badge ${workClass}">${iconMarkup("briefcase")}<span>${workStatus}</span></div>
+                <div class="work-badge ${availability.className}"${availabilityTitle}>${iconMarkup(availability.icon)}<span>${availability.label}</span></div>
               </div>
             </div>
 
             <div class="time-row">
-              <div class="time-value ${featured ? "featured" : "secondary"} ${cardClass}">${localTime}</div>
+              <div class="time-value ${cardClass}">${localTime}</div>
               <div class="weather-stack">
                 <div class="weather-icon">${iconMarkup(weatherIcon)}</div>
                 <div class="weather-temp">${weather.temperature != null ? `${Math.round(weather.temperature)}°C / ${cToF(weather.temperature)}°F` : "--"}</div>
@@ -567,18 +604,14 @@
         }).format(now);
 
         const sorted = [...LOCATIONS].sort((a, b) => {
-          const priorityDiff = getWorkPriority(now, a.tz) - getWorkPriority(now, b.tz);
+          const priorityDiff = getWorkPriority(now, a) - getWorkPriority(now, b);
           if (priorityDiff !== 0) return priorityDiff;
-          const proximityDiff = getMinutesToWorkStart(now, a.tz) - getMinutesToWorkStart(now, b.tz);
+          const proximityDiff = getMinutesToWorkStart(now, a) - getMinutesToWorkStart(now, b);
           if (proximityDiff !== 0) return proximityDiff;
           return a.label.localeCompare(b.label);
         });
 
-        const featured = sorted.slice(0, 3);
-        const secondary = sorted.slice(3);
-
-        featuredGrid.innerHTML = featured.map((city) => renderCard(city, now, true)).join("");
-        secondaryGrid.innerHTML = secondary.map((city) => renderCard(city, now, false)).join("");
+        grid.innerHTML = sorted.map((city) => renderCard(city, now)).join("");
 
         if (window.lucide) {
           lucide.createIcons();
@@ -615,11 +648,46 @@
         }
       }
 
+      async function loadHolidays() {
+        try {
+          const now = new Date();
+          const requests = [];
+          const keys = new Set();
+
+          for (const city of LOCATIONS) {
+            const local = getLocalParts(now, city.tz);
+            const key = `${city.countryCode}-${local.year}`;
+            if (!keys.has(key)) {
+              keys.add(key);
+              requests.push({ countryCode: city.countryCode, year: local.year, key });
+            }
+          }
+
+          const results = await Promise.all(
+            requests.map(async ({ countryCode, year, key }) => {
+              const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
+              const data = await response.json();
+              return [key, Array.isArray(data) ? data : []];
+            })
+          );
+
+          for (const [key, holidays] of results) {
+            holidaysByCountryYear[key] = holidays;
+          }
+
+          render();
+        } catch (error) {
+          console.error("Holiday fetch failed", error);
+        }
+      }
+
       runSanityChecks();
       render();
       loadWeather();
+      loadHolidays();
       setInterval(render, 30000);
       setInterval(loadWeather, 15 * 60 * 1000);
+      setInterval(loadHolidays, 6 * 60 * 60 * 1000);
     </script>
   </body>
 </html>
