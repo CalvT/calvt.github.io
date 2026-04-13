@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Executive Overview</title>
+
+    <!-- React via CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <style>
+      html, body, #root {
+        margin: 0;
+        min-height: 100%;
+        background: #020617;
+        font-family: Inter, system-ui, sans-serif;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="module">
+      import SlideOne from "./slide_1_executive_overview.js";
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(React.createElement(SlideOne));
+    </script>
+  </body>
+</html>
