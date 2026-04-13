@@ -1,10 +1,4 @@
 const { useEffect, useState } = React;
-const {
-  PolarAngleAxis,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-} = Recharts;
 
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1svBS108VVHNNJvJxftx42gF-zoivnaHrs-FtvRj8oG4/gviz/tq?tqx=out:json&gid=361756726";
@@ -50,10 +44,47 @@ function isLastWorkingDayOfMonth(date = new Date()) {
 }
 
 function getAward(rank) {
-  if (rank === 0) return "🏆";
-  if (rank === 1) return "🥈";
-  if (rank === 2) return "🥉";
+  if (rank === 0) return { icon: "🏆", color: "#fde047", label: "Gold" };
+  if (rank === 1) return { icon: "🥈", color: "#cbd5e1", label: "Silver" };
+  if (rank === 2) return { icon: "🥉", color: "#d97706", label: "Bronze" };
   return null;
+}
+
+function Gauge({ value, color }) {
+  const pct = Math.max(0, Math.min(100, value));
+  const degrees = pct * 1.8;
+
+  return React.createElement(
+    "div",
+    {
+      style: {
+        width: "140px",
+        height: "70px",
+        overflow: "hidden",
+        flexShrink: 0,
+      },
+    },
+    React.createElement(
+      "div",
+      {
+        style: {
+          width: "140px",
+          height: "140px",
+          borderRadius: "50%",
+          background: `conic-gradient(from 180deg, ${color} 0deg ${degrees}deg, rgba(255,255,255,0.12) ${degrees}deg 180deg, transparent 180deg 360deg)`,
+          position: "relative",
+        },
+      },
+      React.createElement("div", {
+        style: {
+          position: "absolute",
+          inset: "18px",
+          borderRadius: "50%",
+          background: "#020617",
+        },
+      })
+    )
+  );
 }
 
 export default function SlideTwo() {
@@ -72,7 +103,20 @@ export default function SlideTwo() {
   }, []);
 
   if (!data.length) {
-    return React.createElement("div", { style: { color: "white", padding: 20 } }, "Loading...");
+    return React.createElement(
+      "div",
+      {
+        style: {
+          minHeight: "100vh",
+          background: "#020617",
+          color: "white",
+          padding: "24px",
+          display: "flex",
+          alignItems: "center",
+        },
+      },
+      "Loading..."
+    );
   }
 
   const headers = Object.keys(data[0]);
@@ -87,7 +131,7 @@ export default function SlideTwo() {
         value: Number(row[person]),
       }));
 
-      const rawKpi = entries.at(-1)?.value || 0;
+      const rawKpi = entries[entries.length - 1]?.value || 0;
       const kpi = formatKpiPercent(rawKpi);
 
       return { person, kpi, entries };
@@ -99,32 +143,39 @@ export default function SlideTwo() {
     {
       style: {
         minHeight: "100vh",
-        padding: "64px",
-        color: "white",
         background: "#020617",
+        padding: "56px",
+        color: "white",
+        boxSizing: "border-box",
       },
     },
-
     React.createElement(
       "h1",
-      { style: { fontSize: "56px", marginBottom: "48px" } },
+      {
+        style: {
+          margin: "0 0 48px 0",
+          fontSize: "56px",
+          fontWeight: 600,
+          letterSpacing: "-0.03em",
+        },
+      },
       "Sales Team Performance"
     ),
-
     React.createElement(
       "div",
       {
         style: {
+          margin: "0 auto",
+          maxWidth: "1800px",
           display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(520px, 1fr))",
           gap: "32px",
-          gridTemplateColumns: "repeat(auto-fit, minmax(500px, 1fr))",
         },
       },
-
       peopleData.map((p, index) => {
-        const pct = Math.max(0, p.kpi);
-        const gaugePct = Math.min(100, pct);
-        const color = getColor(pct);
+        const displayPct = Math.max(0, p.kpi);
+        const gaugePct = Math.min(100, displayPct);
+        const color = getColor(displayPct);
         const award = showAwards ? getAward(index) : null;
 
         return React.createElement(
@@ -132,70 +183,153 @@ export default function SlideTwo() {
           {
             key: p.person,
             style: {
-              borderRadius: "32px",
-              padding: "32px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
               position: "relative",
+              borderRadius: "36px",
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.05)",
+              padding: "32px",
+              boxShadow: "0 24px 48px rgba(0,0,0,0.25)",
+              backdropFilter: "blur(12px)",
             },
           },
-
           award &&
             React.createElement(
               "div",
               {
+                title: `${award.label} place`,
                 style: {
                   position: "absolute",
-                  right: 16,
-                  top: 16,
-                  fontSize: "32px",
+                  right: "20px",
+                  top: "16px",
+                  fontSize: "34px",
+                  color: award.color,
                 },
               },
-              award
+              award.icon
             ),
-
           React.createElement(
             "div",
-            { style: { fontSize: "32px", marginBottom: "16px" } },
-            p.person
-          ),
-
-          React.createElement(
-            "div",
-            { style: { display: "flex", alignItems: "center", gap: 20 } },
-
+            {
+              style: {
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                gap: "24px",
+              },
+            },
             React.createElement(
               "div",
-              { style: { width: 150, height: 100 } },
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "18px",
+                },
+              },
               React.createElement(
-                ResponsiveContainer,
-                { width: "100%", height: "100%" },
-                React.createElement(
-                  RadialBarChart,
-                  {
-                    data: [{ value: gaugePct }],
-                    innerRadius: "70%",
-                    outerRadius: "100%",
-                    startAngle: 180,
-                    endAngle: 0,
+                "div",
+                {
+                  style: {
+                    height: "88px",
+                    width: "88px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "999px",
+                    border: "2px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.05)",
+                    fontSize: "11px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.2em",
+                    color: "rgba(255,255,255,0.35)",
+                    boxShadow: "inset 0 2px 8px rgba(255,255,255,0.06)",
+                    flexShrink: 0,
                   },
-                  React.createElement(PolarAngleAxis, {
-                    type: "number",
-                    domain: [0, 100],
-                    tick: false,
-                  }),
-                  React.createElement(RadialBar, {
-                    dataKey: "value",
-                    fill: color,
-                  })
-                )
+                },
+                "Photo"
+              ),
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    fontSize: "38px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.92)",
+                    lineHeight: 1.05,
+                  },
+                },
+                p.person
               )
             ),
-
             React.createElement(
               "div",
-              { style: { fontSize: "48px", fontWeight: "bold" } },
-              pct + "%"
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: "16px",
+                },
+              },
+              React.createElement(Gauge, {
+                value: gaugePct,
+                color,
+              }),
+              React.createElement(
+                "div",
+                {
+                  style: {
+                    fontSize: "64px",
+                    fontWeight: 700,
+                    letterSpacing: "-0.05em",
+                    lineHeight: 1,
+                    transform: "translateY(4px)",
+                  },
+                },
+                `${displayPct}%`
+              )
+            )
+          ),
+          React.createElement(
+            "div",
+            {
+              style: {
+                marginTop: "28px",
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: "22px",
+              },
+            },
+            p.entries.slice(0, -1).map((e) =>
+              React.createElement(
+                "div",
+                { key: e.label },
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      marginBottom: "8px",
+                      fontSize: "15px",
+                      color: "rgba(255,255,255,0.50)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    },
+                  },
+                  e.label
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    style: {
+                      fontSize: "42px",
+                      fontWeight: 700,
+                      letterSpacing: "-0.04em",
+                      lineHeight: 1,
+                    },
+                  },
+                  e.value
+                )
+              )
             )
           )
         );

@@ -53,7 +53,16 @@ export default function SlideOne() {
   if (!thisMonth || !lastMonth) {
     return React.createElement(
       "div",
-      { style: { padding: 24, color: "white" } },
+      {
+        style: {
+          minHeight: "100vh",
+          background: "#020617",
+          color: "white",
+          padding: "24px",
+          display: "flex",
+          alignItems: "center",
+        },
+      },
       "Loading..."
     );
   }
@@ -65,29 +74,31 @@ export default function SlideOne() {
     {
       style: {
         minHeight: "100vh",
+        background: "#020617",
         padding: "48px",
         color: "white",
-        background: "#020617",
+        boxSizing: "border-box",
       },
     },
     React.createElement(
       "h1",
       {
         style: {
+          margin: "0 0 48px 0",
           fontSize: "48px",
-          marginBottom: "48px",
+          fontWeight: 600,
+          letterSpacing: "-0.03em",
         },
       },
       "Executive Overview"
     ),
-
     React.createElement(
       "div",
       {
         style: {
           display: "grid",
-          gap: "24px",
           gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "28px",
         },
       },
       metrics.map((key) => {
@@ -101,37 +112,58 @@ export default function SlideOne() {
           {
             key,
             style: {
-              borderRadius: "24px",
-              padding: "32px",
+              borderRadius: "28px",
+              border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              padding: "32px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+              backdropFilter: "blur(12px)",
             },
           },
           React.createElement(
             "div",
-            { style: { opacity: 0.6, marginBottom: "12px" } },
+            {
+              style: {
+                marginBottom: "14px",
+                fontSize: "18px",
+                color: "rgba(255,255,255,0.60)",
+              },
+            },
             key
           ),
           React.createElement(
             "div",
-            { style: { fontSize: "48px", fontWeight: "bold" } },
+            {
+              style: {
+                marginBottom: "20px",
+                fontSize: "56px",
+                fontWeight: 700,
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+              },
+            },
             formatValue(key, value)
           ),
           React.createElement(
             "div",
             {
               style: {
-                marginTop: "16px",
-                padding: "8px 12px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
                 borderRadius: "999px",
-                display: "inline-block",
-                background: isUp
-                  ? "rgba(16,185,129,0.2)"
-                  : "rgba(239,68,68,0.2)",
+                padding: "10px 14px",
+                fontSize: "18px",
+                background: isUp ? "rgba(16,185,129,0.20)" : "rgba(239,68,68,0.20)",
                 color: isUp ? "#34d399" : "#f87171",
               },
             },
-            `${isUp ? "▲" : "▼"} ${formatValue(key, Math.abs(change))}`
+            React.createElement(
+              "span",
+              { style: { fontSize: "22px", lineHeight: 1 } },
+              isUp ? "▲" : "▼"
+            ),
+            formatValue(key, Math.abs(change))
           )
         );
       })
