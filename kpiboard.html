@@ -3,18 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Executive Overview</title>
+    <title>Dashboard</title>
 
-    <!-- React via CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
 
     <style>
-      html, body, #root {
+      html,
+      body,
+      #root {
         margin: 0;
-        min-height: 100%;
+        height: 100%;
         background: #020617;
         font-family: Inter, system-ui, sans-serif;
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .progress-wrap {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        z-index: 9999;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #38bdf8, #22c55e);
+        transform-origin: left center;
       }
     </style>
   </head>
@@ -24,9 +46,55 @@
 
     <script type="module">
       import SlideOne from "./slide_1_executive_overview.js";
+      import SlideTwo from "./slide_2_sales_team_performance.js";
+
+      const SLIDE_DURATION = 60000;
+      const TICK_MS = 100;
+      const slides = [SlideOne, SlideTwo];
+
+      function App() {
+        const [index, setIndex] = React.useState(0);
+        const [elapsed, setElapsed] = React.useState(0);
+
+        React.useEffect(() => {
+          const timer = setInterval(() => {
+            setElapsed((prev) => {
+              const next = prev + TICK_MS;
+
+              if (next >= SLIDE_DURATION) {
+                setIndex((i) => (i + 1) % slides.length);
+                return 0;
+              }
+
+              return next;
+            });
+          }, TICK_MS);
+
+          return () => clearInterval(timer);
+        }, []);
+
+        const CurrentSlide = slides[index];
+        const progress = Math.min(elapsed / SLIDE_DURATION, 1);
+
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(CurrentSlide),
+          React.createElement(
+            "div",
+            { className: "progress-wrap" },
+            React.createElement("div", {
+              className: "progress-bar",
+              style: {
+                width: `${progress * 100}%`,
+              },
+            })
+          )
+        );
+      }
 
       const root = ReactDOM.createRoot(document.getElementById("root"));
-      root.render(React.createElement(SlideOne));
+      root.render(React.createElement(App));
     </script>
   </body>
 </html>
