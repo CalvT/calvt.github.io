@@ -71,7 +71,7 @@ function Gauge({ value, color }) {
           width: "140px",
           height: "140px",
           borderRadius: "50%",
-          background: `conic-gradient(from 180deg, ${color} 0deg ${degrees}deg, rgba(255,255,255,0.12) ${degrees}deg 180deg, transparent 180deg 360deg)`,
+          background: `conic-gradient(from 270deg, ${color} 0deg ${degrees}deg, rgba(255,255,255,0.12) ${degrees}deg 180deg, transparent 180deg 360deg)`,
           position: "relative",
         },
       },
