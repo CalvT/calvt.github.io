@@ -47,6 +47,19 @@ function computeStatus(due) {
 
 // ── DERIVED DATA BUILDERS ──────────────────────────────────────────────────────
 
+function groupByDay(rows, nameKey) {
+  const map = new Map();
+  for (const row of rows) {
+    const key = `${row[nameKey]}|${row.due.toISOString().slice(0, 10)}`;
+    if (map.has(key)) {
+      map.get(key).amount += row.amount;
+    } else {
+      map.set(key, { ...row });
+    }
+  }
+  return [...map.values()];
+}
+
 function buildKpis(invoices, bills) {
   const overdueInv = invoices.filter(i => i.status === "overdue");
   const soonInv    = invoices.filter(i => i.status === "soon");
@@ -343,19 +356,17 @@ export default function SlideSix() {
         .map(r => {
           const due = new Date(r.fields["Due Date"]);
           return { vendor: r.fields.Supplier, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
-        })
-        .sort(byDue);
+        });
 
       const parsedInvoices = invRecs
         .filter(r => r.fields["Due Date"])
         .map(r => {
           const due = new Date(r.fields["Due Date"]);
           return { client: r.fields.Customer, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
-        })
-        .sort(byDue);
+        });
 
-      setBills(parsedBills);
-      setInvoices(parsedInvoices);
+      setBills(groupByDay(parsedBills, "vendor").sort(byDue).slice(0, 10));
+      setInvoices(groupByDay(parsedInvoices, "client").sort(byDue).slice(0, 10));
       setKpis(buildKpis(parsedInvoices, parsedBills));
       setCashFlow(buildCashFlow(parsedInvoices, parsedBills));
     }
