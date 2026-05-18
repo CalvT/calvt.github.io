@@ -85,6 +85,7 @@ function buildCashFlow(invoices, bills) {
     s.setDate(weekStart.getDate() + i * 7);
     const e = new Date(s);
     e.setDate(s.getDate() + 6);
+    e.setHours(23, 59, 59, 999);
     const fmt = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     return { week: `Wk ${i + 1}`, label: `${fmt(s)}–${fmt(e)}`, s, e, inflow: 0, outflow: 0 };
   });
@@ -354,14 +355,16 @@ export default function SlideSix() {
       const parsedBills = billRecs
         .filter(r => r.fields["Due Date"])
         .map(r => {
-          const due = new Date(r.fields["Due Date"]);
+          const [y, m, d] = r.fields["Due Date"].split("-").map(Number);
+          const due = new Date(y, m - 1, d);
           return { vendor: r.fields.Supplier, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
         });
 
       const parsedInvoices = invRecs
         .filter(r => r.fields["Due Date"])
         .map(r => {
-          const due = new Date(r.fields["Due Date"]);
+          const [y, m, d] = r.fields["Due Date"].split("-").map(Number);
+          const due = new Date(y, m - 1, d);
           return { client: r.fields.Customer, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
         });
 
