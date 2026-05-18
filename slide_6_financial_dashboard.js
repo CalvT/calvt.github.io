@@ -123,8 +123,7 @@ function CashFlowChart({ data }) {
   const slot = iW / n;
   const bw = slot * 0.22;
 
-  // running balance starting point (AR as proxy for current position)
-  let bal = DUMMY.kpis.totalAR;
+  let bal = 0;
   const balances = data.map(d => { bal += d.inflow - d.outflow; return bal; });
 
   const allVals = [...data.map(d => d.inflow), ...data.map(d => d.outflow), ...balances];
