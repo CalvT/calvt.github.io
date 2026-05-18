@@ -184,11 +184,11 @@ export default function SlideTwo() {
             key: p.person,
             style: {
               position: "relative",
-              borderRadius: "36px",
+              borderRadius: "28px",
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.05)",
               padding: "32px",
-              boxShadow: "0 24px 48px rgba(0,0,0,0.25)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
               backdropFilter: "blur(12px)",
             },
           },
