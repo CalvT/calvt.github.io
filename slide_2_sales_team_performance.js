@@ -27,8 +27,7 @@ function getColor(kpi) {
 }
 
 function formatKpiPercent(value) {
-  const pct = value <= 1 ? value * 100 : value;
-  return Math.round(pct);
+  return Math.round(value * 100);
 }
 
 function isLastWorkingDayOfMonth(date = new Date()) {
@@ -50,7 +49,7 @@ function getAward(rank) {
   return null;
 }
 
-function Gauge({ value, color }) {
+function Gauge({ value, label, color }) {
   const pct = Math.max(0, Math.min(100, value));
   const degrees = pct * 1.8;
 
@@ -62,6 +61,7 @@ function Gauge({ value, color }) {
         height: "70px",
         overflow: "hidden",
         flexShrink: 0,
+        position: "relative",
       },
     },
     React.createElement(
@@ -83,7 +83,21 @@ function Gauge({ value, color }) {
           background: "#020617",
         },
       })
-    )
+    ),
+    label && React.createElement("div", {
+      style: {
+        position: "absolute",
+        bottom: "4px",
+        left: 0,
+        right: 0,
+        textAlign: "center",
+        fontSize: "24px",
+        fontWeight: 700,
+        letterSpacing: "-0.03em",
+        color,
+        lineHeight: 1,
+      },
+    }, label)
   );
 }
 
@@ -261,33 +275,11 @@ export default function SlideTwo() {
                 p.person
               )
             ),
-            React.createElement(
-              "div",
-              {
-                style: {
-                  display: "flex",
-                  alignItems: "flex-end",
-                  gap: "16px",
-                },
-              },
-              React.createElement(Gauge, {
-                value: gaugePct,
-                color,
-              }),
-              React.createElement(
-                "div",
-                {
-                  style: {
-                    fontSize: "64px",
-                    fontWeight: 700,
-                    letterSpacing: "-0.05em",
-                    lineHeight: 1,
-                    transform: "translateY(4px)",
-                  },
-                },
-                `${displayPct}%`
-              )
-            )
+            React.createElement(Gauge, {
+              value: gaugePct,
+              label: `${displayPct}%`,
+              color,
+            })
           ),
           React.createElement(
             "div",
