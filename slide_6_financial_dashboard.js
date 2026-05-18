@@ -1,12 +1,12 @@
 const { useEffect, useState, useRef } = React;
 
 const today = new Date();
-const SALES_PLACEHOLDER = { openOrdersValue: 184500, invoicedThisMonth: 97200 };
 
 const AIRTABLE_PAT   = "pattatu3AWoZ8k7QJ.4bd5e454a785c010c3638fda3a1573de28c89f929581313e412c8ebeae1f69d7";
 const AIRTABLE_BASE  = "apphx8sevYVh7meEf";
 const BILLS_TABLE    = "tblF2CiqReklsVZLQ";
 const INVOICES_TABLE = "tblrlvmLgyefaDfrj";
+const SUMMARY_TABLE  = "tblSOlt30yqE3v49r";
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 
@@ -326,6 +326,7 @@ export default function SlideSix() {
   const [cashFlow, setCashFlow] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [bills,    setBills]    = useState([]);
+  const [sales,    setSales]    = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -347,10 +348,16 @@ export default function SlideSix() {
           ? statusOrder[a.status] - statusOrder[b.status]
           : a.due - b.due;
 
-      const [billRecs, invRecs] = await Promise.all([
+      const [billRecs, invRecs, summaryRecs] = await Promise.all([
         fetchAll(BILLS_TABLE),
         fetchAll(INVOICES_TABLE),
+        fetchAll(SUMMARY_TABLE),
       ]);
+      const summaryMap = Object.fromEntries(summaryRecs.map(r => [r.fields.Metric, r.fields.Value ?? 0]));
+      setSales({
+        openOrdersValue:  summaryMap["Open Sales Order Value"] ?? 0,
+        invoicedThisMonth: summaryMap["Invoiced Value"] ?? 0,
+      });
 
       const parsedBills = billRecs
         .filter(r => r.fields["Due Date"])
@@ -379,11 +386,11 @@ export default function SlideSix() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!kpis) return React.createElement("div", {
+  if (!kpis || !sales) return React.createElement("div", {
     style: { minHeight: "100vh", background: "#020617", color: "white", padding: "56px", display: "flex", alignItems: "center" },
   }, "Loading...");
 
-  const forecasted = SALES_PLACEHOLDER.openOrdersValue + SALES_PLACEHOLDER.invoicedThisMonth;
+  const forecasted = sales.openOrdersValue + sales.invoicedThisMonth;
 
   return React.createElement("div", {
     style: {
@@ -433,8 +440,8 @@ export default function SlideSix() {
       }),
       React.createElement(SalesKpiCard, {
         forecasted,
-        openOrders: SALES_PLACEHOLDER.openOrdersValue,
-        invoiced: SALES_PLACEHOLDER.invoicedThisMonth,
+        openOrders: sales.openOrdersValue,
+        invoiced: sales.invoicedThisMonth,
       }),
     ),
 
