@@ -268,7 +268,6 @@ function KpiCard({ label, value, sub, accentColor }) {
       ...card,
       padding: "24px 28px",
       display: "flex", flexDirection: "column", justifyContent: "space-between",
-      borderTop: `2px solid ${accentColor}`,
     }
   },
     React.createElement("div", { style: { fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.40)", marginBottom: 10 } }, label),
