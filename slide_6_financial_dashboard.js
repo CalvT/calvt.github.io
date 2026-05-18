@@ -285,7 +285,6 @@ function SalesKpiCard({ forecasted, openOrders, invoiced }) {
       ...card,
       padding: "24px 28px",
       display: "flex", flexDirection: "column", justifyContent: "space-between",
-      borderTop: "2px solid #a78bfa",
     }
   },
     React.createElement("div", { style: { fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.40)", marginBottom: 10 } }, "Forecasted Sales"),
@@ -314,7 +313,6 @@ export default function SlideSix() {
       padding: "56px",
       color: "white",
       boxSizing: "border-box",
-      fontFamily: "Inter, system-ui, -apple-system, sans-serif",
       display: "flex",
       flexDirection: "column",
       gap: "20px",
@@ -323,7 +321,7 @@ export default function SlideSix() {
 
     // ── TITLE
     React.createElement("h1", {
-      style: { margin: "0 0 48px 0", fontSize: 56, fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1 }
+      style: { margin: "0 0 48px 0", fontSize: "56px", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1 }
     }, "Financial Dashboard"),
 
     // ── KPI STRIP
