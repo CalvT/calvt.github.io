@@ -91,7 +91,7 @@ function Gauge({ value, label, color }) {
         left: 0,
         right: 0,
         textAlign: "center",
-        fontSize: "24px",
+        fontSize: "40px",
         fontWeight: 700,
         letterSpacing: "-0.03em",
         color,
