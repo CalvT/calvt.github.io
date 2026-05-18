@@ -57,8 +57,8 @@ function Gauge({ value, label, color }) {
     "div",
     {
       style: {
-        width: "140px",
-        height: "70px",
+        width: "176px",
+        height: "88px",
         overflow: "hidden",
         flexShrink: 0,
         position: "relative",
@@ -68,8 +68,8 @@ function Gauge({ value, label, color }) {
       "div",
       {
         style: {
-          width: "140px",
-          height: "140px",
+          width: "176px",
+          height: "176px",
           borderRadius: "50%",
           background: `conic-gradient(from 270deg, ${color} 0deg ${degrees}deg, rgba(255,255,255,0.12) ${degrees}deg 180deg, transparent 180deg 360deg)`,
           position: "relative",
