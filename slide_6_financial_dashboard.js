@@ -50,6 +50,12 @@ const DUMMY = {
   ],
 };
 
+// ── AIRTABLE CONFIG ────────────────────────────────────────────────────────────
+const AIRTABLE_PAT   = "pattatu3AWoZ8k7QJ.4bd5e454a785c010c3638fda3a1573de28c89f929581313e412c8ebeae1f69d7";
+const AIRTABLE_BASE  = "apphx8sevYVh7meEf";
+const BILLS_TABLE    = "tblF2CiqReklsVZLQ";
+const INVOICES_TABLE = "tblrlvmLgyefaDfrj";
+
 // ── HELPERS ────────────────────────────────────────────────────────────────────
 
 function fmt$$(n) {
@@ -78,6 +84,13 @@ function statusLabel(s, due) {
   if (d === 0)         return "Due today";
   if (d === 1)         return "Due tomorrow";
   return `${d}d`;
+}
+
+function computeStatus(due) {
+  const d = dayDiff(due);
+  if (d < 0) return "overdue";
+  if (d <= 7) return "soon";
+  return "ok";
 }
 
 // ── CARD STYLE ─────────────────────────────────────────────────────────────────
@@ -300,8 +313,62 @@ function SalesKpiCard({ forecasted, openOrders, invoiced }) {
 // ── MAIN SLIDE ─────────────────────────────────────────────────────────────────
 
 export default function SlideSix() {
-  const [data] = useState(DUMMY);
-  const { kpis, cashFlow, invoices, bills } = data;
+  const [kpis]     = useState(DUMMY.kpis);
+  const [cashFlow] = useState(DUMMY.cashFlow);
+  const [invoices, setInvoices] = useState([]);
+  const [bills,    setBills]    = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      async function fetchAll(tableId) {
+        let records = [], offset;
+        do {
+          const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${tableId}?pageSize=100${offset ? `&offset=${offset}` : ""}`;
+          const res = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_PAT}` } });
+          const json = await res.json();
+          records = records.concat(json.records || []);
+          offset = json.offset;
+        } while (offset);
+        return records;
+      }
+
+      const statusOrder = { overdue: 0, soon: 1, ok: 2 };
+      const byDue = (a, b) =>
+        statusOrder[a.status] !== statusOrder[b.status]
+          ? statusOrder[a.status] - statusOrder[b.status]
+          : a.due - b.due;
+
+      const [billRecs, invRecs] = await Promise.all([
+        fetchAll(BILLS_TABLE),
+        fetchAll(INVOICES_TABLE),
+      ]);
+
+      setBills(
+        billRecs
+          .filter(r => r.fields["Due Date"])
+          .map(r => {
+            const due = new Date(r.fields["Due Date"]);
+            return { vendor: r.fields.Supplier, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
+          })
+          .sort(byDue)
+      );
+
+      setInvoices(
+        invRecs
+          .filter(r => r.fields["Due Date"])
+          .map(r => {
+            const due = new Date(r.fields["Due Date"]);
+            return { client: r.fields.Customer, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
+          })
+          .sort(byDue)
+      );
+    }
+
+    load();
+    const interval = setInterval(load, 300000);
+    return () => clearInterval(interval);
+  }, []);
+
   const forecasted = kpis.openOrdersValue + kpis.invoicedThisMonth;
 
   return React.createElement("div", {
