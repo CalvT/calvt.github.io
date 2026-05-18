@@ -90,12 +90,12 @@ function buildCashFlow(invoices, bills) {
   });
 
   for (const inv of invoices) {
-    const w = weeks.find(w => inv.due >= w.s && inv.due <= w.e);
-    if (w) w.inflow += inv.amount;
+    const w = weeks.find(w => inv.due >= w.s && inv.due <= w.e) ?? weeks[0];
+    w.inflow += inv.amount;
   }
   for (const bill of bills) {
-    const w = weeks.find(w => bill.due >= w.s && bill.due <= w.e);
-    if (w) w.outflow += bill.amount;
+    const w = weeks.find(w => bill.due >= w.s && bill.due <= w.e) ?? weeks[0];
+    w.outflow += bill.amount;
   }
 
   return weeks.map(({ week, label, inflow, outflow }) => ({ week, label, inflow, outflow }));
