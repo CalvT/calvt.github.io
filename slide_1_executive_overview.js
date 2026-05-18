@@ -75,7 +75,7 @@ export default function SlideOne() {
       style: {
         minHeight: "100vh",
         background: "#020617",
-        padding: "48px",
+        padding: "56px",
         color: "white",
         boxSizing: "border-box",
       },
@@ -85,7 +85,7 @@ export default function SlideOne() {
       {
         style: {
           margin: "0 0 48px 0",
-          fontSize: "48px",
+          fontSize: "56px",
           fontWeight: 600,
           letterSpacing: "-0.03em",
         },

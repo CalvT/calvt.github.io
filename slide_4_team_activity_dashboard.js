@@ -148,7 +148,7 @@ export default function SlideFour() {
       style: {
         minHeight: "100vh",
         background: "#020617",
-        padding: "48px 48px 64px",
+        padding: "56px",
         color: "white",
         boxSizing: "border-box",
       },
