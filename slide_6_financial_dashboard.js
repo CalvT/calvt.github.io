@@ -82,7 +82,7 @@ function statusLabel(s, due) {
 
 // ── CARD STYLE ─────────────────────────────────────────────────────────────────
 const card = {
-  borderRadius: "20px",
+  borderRadius: "28px",
   border: "1px solid rgba(255,255,255,0.10)",
   background: "rgba(255,255,255,0.05)",
   boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
@@ -311,7 +311,7 @@ export default function SlideSix() {
     style: {
       minHeight: "100vh",
       background: "#020617",
-      padding: "40px 48px 80px",
+      padding: "56px",
       color: "white",
       boxSizing: "border-box",
       fontFamily: "Inter, system-ui, -apple-system, sans-serif",
@@ -323,7 +323,7 @@ export default function SlideSix() {
 
     // ── TITLE
     React.createElement("h1", {
-      style: { margin: 0, fontSize: 42, fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1 }
+      style: { margin: "0 0 48px 0", fontSize: 56, fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1 }
     }, "Financial Dashboard"),
 
     // ── KPI STRIP
