@@ -1,56 +1,8 @@
 const { useEffect, useState, useRef } = React;
 
-// ── DUMMY DATA ─────────────────────────────────────────────────────────────────
-// Replace these with parseGViz calls once your Google Sheet is ready
-
 const today = new Date();
-function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+const SALES_PLACEHOLDER = { openOrdersValue: 184500, invoicedThisMonth: 97200 };
 
-const DUMMY = {
-  kpis: {
-    totalAR: 156240,
-    totalAP: 94780,
-    overdueAmount: 28300,
-    overdueCount: 2,
-    next7DaysAmount: 47450,
-    next7DaysCount: 4,
-    openOrdersValue: 184500,
-    invoicedThisMonth: 97200,
-  },
-
-  cashFlow: [
-    { week: "Wk 1", label: "May 19–25", inflow: 62000, outflow: 48000 },
-    { week: "Wk 2", label: "May 26–Jun 1", inflow: 45000, outflow: 52000 },
-    { week: "Wk 3", label: "Jun 2–8",   inflow: 78000, outflow: 61000 },
-    { week: "Wk 4", label: "Jun 9–15",  inflow: 55000, outflow: 44000 },
-    { week: "Wk 5", label: "Jun 16–22", inflow: 90000, outflow: 72000 },
-    { week: "Wk 6", label: "Jun 23–29", inflow: 48000, outflow: 39000 },
-  ],
-
-  invoices: [
-    { client: "Meridian Holdings",   amount: 28300, due: addDays(today, -5), status: "overdue" },
-    { client: "Apex Creative Co.",   amount: 14750, due: addDays(today, -2), status: "overdue" },
-    { client: "Northside Media",     amount:  9200, due: addDays(today,  3), status: "soon"    },
-    { client: "Greenfield Partners", amount: 31500, due: addDays(today,  7), status: "soon"    },
-    { client: "Castlebrook Tech",    amount: 18900, due: addDays(today, 12), status: "ok"      },
-    { client: "Luminary Brands",     amount:  7600, due: addDays(today, 15), status: "ok"      },
-    { client: "Harrow Systems",      amount: 22400, due: addDays(today, 21), status: "ok"      },
-    { client: "Sundial Group",       amount: 11590, due: addDays(today, 28), status: "ok"      },
-  ],
-
-  bills: [
-    { vendor: "AWS / Cloud Infra",   amount:  4200, due: addDays(today,  2), status: "soon" },
-    { vendor: "Office Lease",        amount: 18500, due: addDays(today,  5), status: "soon" },
-    { vendor: "Salesforce CRM",      amount:  2800, due: addDays(today,  8), status: "ok"   },
-    { vendor: "Contractor – Dev",    amount: 12000, due: addDays(today, 10), status: "ok"   },
-    { vendor: "Legal – Perkins LLP", amount:  6500, due: addDays(today, 14), status: "ok"   },
-    { vendor: "Insurance Premium",   amount:  3200, due: addDays(today, 20), status: "ok"   },
-    { vendor: "Cleaning Services",   amount:   980, due: addDays(today, 22), status: "ok"   },
-    { vendor: "Business Internet",   amount:   340, due: addDays(today, 30), status: "ok"   },
-  ],
-};
-
-// ── AIRTABLE CONFIG ────────────────────────────────────────────────────────────
 const AIRTABLE_PAT   = "pattatu3AWoZ8k7QJ.4bd5e454a785c010c3638fda3a1573de28c89f929581313e412c8ebeae1f69d7";
 const AIRTABLE_BASE  = "apphx8sevYVh7meEf";
 const BILLS_TABLE    = "tblF2CiqReklsVZLQ";
@@ -91,6 +43,49 @@ function computeStatus(due) {
   if (d < 0) return "overdue";
   if (d <= 7) return "soon";
   return "ok";
+}
+
+// ── DERIVED DATA BUILDERS ──────────────────────────────────────────────────────
+
+function buildKpis(invoices, bills) {
+  const overdueInv = invoices.filter(i => i.status === "overdue");
+  const soonInv    = invoices.filter(i => i.status === "soon");
+  return {
+    totalAR:         invoices.reduce((s, i) => s + i.amount, 0),
+    totalAP:         bills.reduce((s, b) => s + b.amount, 0),
+    overdueAmount:   overdueInv.reduce((s, i) => s + i.amount, 0),
+    overdueCount:    overdueInv.length,
+    next7DaysAmount: soonInv.reduce((s, i) => s + i.amount, 0),
+    next7DaysCount:  soonInv.length,
+  };
+}
+
+function buildCashFlow(invoices, bills) {
+  const dow = today.getDay();
+  const daysToMon = dow === 0 ? -6 : 1 - dow;
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() + daysToMon);
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weeks = Array.from({ length: 6 }, (_, i) => {
+    const s = new Date(weekStart);
+    s.setDate(weekStart.getDate() + i * 7);
+    const e = new Date(s);
+    e.setDate(s.getDate() + 6);
+    const fmt = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return { week: `Wk ${i + 1}`, label: `${fmt(s)}–${fmt(e)}`, s, e, inflow: 0, outflow: 0 };
+  });
+
+  for (const inv of invoices) {
+    const w = weeks.find(w => inv.due >= w.s && inv.due <= w.e);
+    if (w) w.inflow += inv.amount;
+  }
+  for (const bill of bills) {
+    const w = weeks.find(w => bill.due >= w.s && bill.due <= w.e);
+    if (w) w.outflow += bill.amount;
+  }
+
+  return weeks.map(({ week, label, inflow, outflow }) => ({ week, label, inflow, outflow }));
 }
 
 // ── CARD STYLE ─────────────────────────────────────────────────────────────────
@@ -313,8 +308,8 @@ function SalesKpiCard({ forecasted, openOrders, invoiced }) {
 // ── MAIN SLIDE ─────────────────────────────────────────────────────────────────
 
 export default function SlideSix() {
-  const [kpis]     = useState(DUMMY.kpis);
-  const [cashFlow] = useState(DUMMY.cashFlow);
+  const [kpis,     setKpis]     = useState(null);
+  const [cashFlow, setCashFlow] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [bills,    setBills]    = useState([]);
 
@@ -343,25 +338,26 @@ export default function SlideSix() {
         fetchAll(INVOICES_TABLE),
       ]);
 
-      setBills(
-        billRecs
-          .filter(r => r.fields["Due Date"])
-          .map(r => {
-            const due = new Date(r.fields["Due Date"]);
-            return { vendor: r.fields.Supplier, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
-          })
-          .sort(byDue)
-      );
+      const parsedBills = billRecs
+        .filter(r => r.fields["Due Date"])
+        .map(r => {
+          const due = new Date(r.fields["Due Date"]);
+          return { vendor: r.fields.Supplier, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
+        })
+        .sort(byDue);
 
-      setInvoices(
-        invRecs
-          .filter(r => r.fields["Due Date"])
-          .map(r => {
-            const due = new Date(r.fields["Due Date"]);
-            return { client: r.fields.Customer, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
-          })
-          .sort(byDue)
-      );
+      const parsedInvoices = invRecs
+        .filter(r => r.fields["Due Date"])
+        .map(r => {
+          const due = new Date(r.fields["Due Date"]);
+          return { client: r.fields.Customer, amount: r.fields.Amount ?? 0, due, status: computeStatus(due) };
+        })
+        .sort(byDue);
+
+      setBills(parsedBills);
+      setInvoices(parsedInvoices);
+      setKpis(buildKpis(parsedInvoices, parsedBills));
+      setCashFlow(buildCashFlow(parsedInvoices, parsedBills));
     }
 
     load();
@@ -369,7 +365,11 @@ export default function SlideSix() {
     return () => clearInterval(interval);
   }, []);
 
-  const forecasted = kpis.openOrdersValue + kpis.invoicedThisMonth;
+  if (!kpis) return React.createElement("div", {
+    style: { minHeight: "100vh", background: "#020617", color: "white", padding: "56px", display: "flex", alignItems: "center" },
+  }, "Loading...");
+
+  const forecasted = SALES_PLACEHOLDER.openOrdersValue + SALES_PLACEHOLDER.invoicedThisMonth;
 
   return React.createElement("div", {
     style: {
@@ -419,8 +419,8 @@ export default function SlideSix() {
       }),
       React.createElement(SalesKpiCard, {
         forecasted,
-        openOrders: kpis.openOrdersValue,
-        invoiced: kpis.invoicedThisMonth,
+        openOrders: SALES_PLACEHOLDER.openOrdersValue,
+        invoiced: SALES_PLACEHOLDER.invoicedThisMonth,
       }),
     ),
 
