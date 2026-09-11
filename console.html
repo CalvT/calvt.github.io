@@ -197,14 +197,38 @@ woopra.track();
 	var a = navigator.appCodeName;
 	var n = navigator.appName;
 	var v = navigator.appVersion;
-	var typedmessage = "$:^1500 useragent /test^1000<br>#------Begining UserAgent Test------#<br>^1500Your IP: " + myip + "<br>^500Platform: " + p + "<br>^500Language: " + l + "<br>^500Browser Code Name: " + a + "<br>^500Browser Name: " + n + "<br>^500Browser Version: " + v + "<br>^500#------End of UserAgent Test------#<br>$:^1000 browser /test^1000<br>Test Not Installed^500<br>$:";
+	// myip is defined by the third-party l2.io script in <head>. If that request
+	// is blocked (ad blockers, offline) or the service is down, the variable is
+	// never declared, so read it defensively instead of throwing a ReferenceError
+	// and leaving the console permanently empty.
+	var ip = (typeof myip !== "undefined" && myip) ? myip : "unavailable";
+
+	var typedmessage = "$:^1500 useragent /test^1000<br>#------Begining UserAgent Test------#<br>^1500Your IP: " + ip + "<br>^500Platform: " + p + "<br>^500Language: " + l + "<br>^500Browser Code Name: " + a + "<br>^500Browser Name: " + n + "<br>^500Browser Version: " + v + "<br>^500#------End of UserAgent Test------#<br>$:^1000 browser /test^1000<br>Test Not Installed^500<br>$:";
 	var typedmessageerror = "<b>Error:</b> Oh dear. Our system isn't working right now. It's very embarrasing :/^2000<br>It will be back up soon though! :)";
-	document.addEventListener('DOMContentLoaded', function(){
-      Typed.new('#typed-text', {
-        strings: [typedmessage],
-        typeSpeed: 0
-      });
-  });
+
+	document.addEventListener('DOMContentLoaded', function () {
+		var target = document.getElementById('typed-text');
+
+		// No Typed.js at all: render the error text plainly, stripping the
+		// ^nnn pause markers that only Typed.js understands.
+		if (typeof Typed === "undefined") {
+			target.innerHTML = typedmessageerror.replace(/\^\d+/g, "");
+			return;
+		}
+
+		try {
+			Typed.new('#typed-text', {
+				strings: [typedmessage],
+				typeSpeed: 0
+			});
+		} catch (e) {
+			target.innerHTML = "";
+			Typed.new('#typed-text', {
+				strings: [typedmessageerror],
+				typeSpeed: 0
+			});
+		}
+	});
 </script>
 </body>
 </html>
