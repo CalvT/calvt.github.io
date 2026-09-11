@@ -77,18 +77,28 @@
 					<h2>Portfolio</h2>
 					<p>Just a few of my favourite photos out of the many I have shot.<br>They aren't my best, I just like these more than some of the others.</p>
 				</header>
-				<div class="inner gallery">
+				<!--
+					Lightbox intentionally disabled. Poptrox only binds anchors that
+					carry an href pointing at a full-size image, and this repo has no
+					images/fulls/ directory, so the old <a class="image fit"> wrappers
+					were inert - they rendered as clickable but did nothing.
+
+					To restore it: add images/fulls/01.JPG ... 08.JPG, put the "gallery"
+					class back on the div below, and wrap each thumbnail again as
+					<a href="images/fulls/01.JPG" class="image fit"><img src="images/thumbs/01.JPG"></a>
+				-->
+				<div class="inner">
 					<div class="row 0%">
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/01.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/02.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/03.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/04.JPG"></a></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/01.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/02.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/03.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/04.JPG"></span></div>
 					</div>
 					<div class="row 0%">
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/05.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/06.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/07.JPG"></a></div>
-						<div class="3u 12u(mobile)"><a class="image fit"><img src="images/thumbs/08.JPG"></a></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/05.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/06.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/07.JPG"></span></div>
+						<div class="3u 12u(mobile)"><span class="image fit"><img src="images/thumbs/08.JPG"></span></div>
 					</div>
 				</div>
 			</article>
